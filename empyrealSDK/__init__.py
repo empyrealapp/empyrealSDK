@@ -4,7 +4,7 @@ from .modules import core
 
 ENVIRONMENTS = {
     "local": "http://localhost:5001",
-    "prod": "TBD",
+    "prod": "https://api.empyrealsdk.com",
 }
 
 

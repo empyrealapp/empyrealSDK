@@ -39,8 +39,6 @@ setup(
     python_requires=">=3.7.2",
     extras_require=extras_require,
     license="MIT",
-    zip_safe=False,
-    keywords="web3",
     classifiers=[
         "Intended Audience :: Developers",
         "License :: OSI Approved :: MIT License",
