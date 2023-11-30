@@ -9,39 +9,45 @@ if TYPE_CHECKING:
 
 
 class RequestHelpers:
-    rpc_url: str
-    api_key: str
+    def __init__(self, sdk: "EmpyrealSDK", version="v1"):
+        self.sdk = sdk
+        self.version = version
 
-    def __init__(self, sdk: "EmpyrealSDK"):
-        self.rpc_url = sdk.rpc_url
-        self.api_key = sdk.api_key
+    @property
+    def rpc_url(self):
+        return self.sdk.rpc_url
+
+    @property
+    def api_key(self):
+        return self.sdk.api_key
 
     async def _get(
         self, path: str, params: Optional[Mapping[str, PrimitiveData]] = None
     ) -> Response:
         async with httpx.AsyncClient() as client:
-            return await client.get(
-                f"{self.rpc_url}/{path}",
+            response = await client.get(
+                f"{self.rpc_url}/{self.version}/{path}",
                 headers={
                     "API-KEY": self.api_key,
                 },
                 params=params,
             )
+        return response
 
     async def _post(self, path: str, json: Any) -> Response:
         async with httpx.AsyncClient() as client:
             return await client.post(
-                f"{self.rpc_url}/{path}",
+                f"{self.rpc_url}/{self.version}/{path}",
                 json=json,
                 headers={
                     "API-KEY": self.api_key,
                 },
             )
 
-    async def _put(self, path: str, json: Any) -> Response:
+    async def _put(self, path: str, json: Any = {}) -> Response:
         async with httpx.AsyncClient() as client:
             return await client.put(
-                f"{self.rpc_url}/{path}",
+                f"{self.rpc_url}/{self.version}/{path}",
                 json=json,
                 headers={
                     "API-KEY": self.api_key,
@@ -51,7 +57,7 @@ class RequestHelpers:
     async def _delete(self, path: str) -> Response:
         async with httpx.AsyncClient() as client:
             return await client.delete(
-                f"{self.rpc_url}/{path}",
+                f"{self.rpc_url}/{self.version}/{path}",
                 headers={
                     "API-KEY": self.api_key,
                 },

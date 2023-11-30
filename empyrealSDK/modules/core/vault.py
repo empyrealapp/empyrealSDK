@@ -13,8 +13,7 @@ class VaultResource(RequestHelpers):
 
         This will show the general data for each vault
 
-        Returns:
-            List[Vault]
+        :return: a list of `Vault`s
         """
         response = await self._get("vault/")
         return [Vault(**v) for v in response.json()["vaults"]]
@@ -29,8 +28,7 @@ class VaultResource(RequestHelpers):
         balance, or to help a user make determinations about how to
         allocate their escrowed funds across different positions.
 
-        Returns:
-            List[VaultPosition]
+        :return: A list of `VaultPosition`'s
         """
 
         response = await self._get(

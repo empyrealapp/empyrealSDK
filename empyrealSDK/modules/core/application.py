@@ -1,7 +1,9 @@
 from typing import Optional
+from uuid import UUID
 
 from empyrealSDK.utils import RequestHelpers
-from empyrealSDK.types.application import Application
+from empyrealSDK.types import Application
+from empyrealSDK.exc import handle_response_error
 
 
 class ApplicationResource(RequestHelpers):
@@ -14,32 +16,39 @@ class ApplicationResource(RequestHelpers):
             ValueError: If api key is invalid
         """
         response = await self._get("app/")
+        if not response.status_code == 200:
+            raise ValueError(response.json()["detail"])
         return Application(**response.json())
 
     async def update(
         self,
-        transfer_fee: Optional[int] = None,
-        swap_fee: Optional[int] = 0,
-        min_fee: Optional[int] = 0,
-        max_fee: Optional[int] = 0,
-        fee_collection_amount: Optional[int] = 0,
-        owner_wallet_id: Optional[str] = None,
-    ) -> bool:
+        swap_fee: Optional[int] = None,
+        fee_collection_amount: Optional[int] = None,
+        app_wallet_id: Optional[UUID] = None,
+    ):
         """update app config.  Any fields left as `None` will be ignored.
 
-        Returns:
-            bool: If the update was successful or not
+        :returns: bool: If the update was successful or not
         """
 
         response = await self._put(
             "app/",
             json={
-                "ownerWalletId": owner_wallet_id,
-                "transferFee": transfer_fee,
                 "swapFee": swap_fee,
-                "minFee": min_fee,
-                "maxFee": max_fee,
                 "feeCollectionAmount": fee_collection_amount,
+                "appWalletId": app_wallet_id,
             },
         )
-        return response.status_code == 200
+        return response
+
+    async def update_api_key(
+        self,
+    ):
+        response = await self._put(
+            "app/apikey",
+        )
+        handle_response_error(response)
+        new_api_key = response.json()["apiKey"]
+        self.sdk.api_key = new_api_key
+
+        return new_api_key

@@ -25,3 +25,19 @@ docs/
 # Python
 __pycache__
 *.pyc
+.vscode/
+.venv/
+
+# mypy
+.mypy_cache
+
+
+# google
+.firebase
+.firebaserc
+firebase.json
+__pyproject.toml
+
+# test
+test.py
+tests/

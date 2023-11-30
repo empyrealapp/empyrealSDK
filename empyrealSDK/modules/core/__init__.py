@@ -1,9 +1,8 @@
-# flake8: noqa
-
 from .application import ApplicationResource
 from .infra import PingResource
 from .token import TokenResource
 from .user import UserResource
+from .wallet import WalletResource
 from .vault import VaultResource
 
 __all__ = [
@@ -12,4 +11,5 @@ __all__ = [
     "TokenResource",
     "UserResource",
     "VaultResource",
+    "WalletResource",
 ]

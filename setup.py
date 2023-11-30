@@ -3,6 +3,9 @@ from setuptools import (
     setup,
 )
 
+with open("README.md") as f:
+    readme = f.read()
+
 extras_require = {
     "linter": [
         "black>=22.1.0",
@@ -23,12 +26,13 @@ extras_require = {
 
 setup(
     name="empyrealSDK",
-    version="0.0.1",
-    description="""empyrealSDK""",
+    version="0.0.1.post3",
+    description="Empyreal SDK for web3 development",
+    long_description=readme,
+    long_description_content_type="text/markdown",
     author="Empyreal",
     author_email="dev@empyreal.app",
     url="https://github.com/empyrealapp/empyrealSDK",
-    include_package_data=True,
     install_requires=[
         "eth-typing>=3.0.0",
         "eth-utils>=2.1.0",
