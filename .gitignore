@@ -1,0 +1,43 @@
+# C extensions
+*.so
+
+# Packages
+*.egg
+*.egg-info
+dist
+build
+eggs
+.eggs
+parts
+bin
+var
+sdist
+develop-eggs
+.installed.cfg
+lib
+lib64
+venv*
+.python-version
+
+# Sphinx
+docs/
+
+# Python
+__pycache__
+*.pyc
+.vscode/
+.venv/
+
+# mypy
+.mypy_cache
+
+
+# google
+.firebase
+.firebaserc
+firebase.json
+__pyproject.toml
+
+# test
+test.py
+tests/
