@@ -1,8 +1,6 @@
 from typing import Literal
 
-from .modules.dex import price
-
-from .modules import core
+from .modules import core, dex
 from .utils.client import _set_global_client
 
 ENVIRONMENTS = {
@@ -48,5 +46,6 @@ class EmpyrealSDK:
         self.user = core.UserResource(self)
         self.vault = core.VaultResource(self)
         self.wallet = core.WalletResource(self)
-        self.prices = price.PriceResource(self)
+        self.prices = dex.price.PriceResource(self)
+        self.swap = dex.swap.SwapResource(self)
         _set_global_client(self)

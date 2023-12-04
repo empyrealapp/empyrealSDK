@@ -44,6 +44,10 @@ class Wallet(BaseModel):
         return f"<{self.type.value.capitalize()} Wallet: '0x..{self.address[-4:]}'>"
 
     @classmethod
+    async def create(cls):
+        pass
+
+    @classmethod
     async def load(cls, address):
         """
         If you load a wallet by address, it will give a noncustodial wallet.

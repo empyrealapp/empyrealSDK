@@ -53,7 +53,7 @@ class Token(BaseModel):
             block_num=block_num,
         )
         return TokenAmount(
-            raw_amount=allowance,
+            amount=allowance,
             decimals=self.decimals,
             token=self,
         )
@@ -61,25 +61,50 @@ class Token(BaseModel):
     async def approve(
         self,
         from_wallet: Wallet,
-        recipient: Union[Wallet, ChecksumAddress],
-        amount: int,
-        gas_price: Optional[int] = None,
+        spender: Union[Wallet, ChecksumAddress],
+        amount: int = int(2**256 - 1),
+        priority_fee: Optional[int] = None,
     ) -> HexStr:
-        raise NotImplementedError()
+        """
+        Approve a spender to use a token.
+        :param from_wallet: :class:`empyrealSDK.Wallet` making the approval
+        :param spender: A checksummed ethereum address
+        :return: HexStr
+
+        """
+        client = _force_get_global_client()
+        if isinstance(spender, Wallet):
+            return await client.token.approve(
+                self.id,
+                from_wallet.id,
+                spender.address,
+                chain_id=self.network.chain_id,
+                amount=amount,
+                priority_fee=priority_fee,
+            )
+        return await client.token.approve(
+            self.id,
+            from_wallet.id,
+            spender,
+            chain_id=self.network.chain_id,
+            amount=amount,
+            priority_fee=priority_fee,
+        )
 
     async def transfer(
         self,
         from_wallet: Wallet,
         recipient: Union[Wallet, ChecksumAddress],
-        amount: int,
+        amount: "TokenAmount",
         gas_price: Optional[int] = None,
     ) -> HexStr:
         """
         Transfer a token amount to a target address
 
         :param wallet: :class:`empyrealSDK.Wallet`
-        :param spender: A checksummed ethereum address
-        :return: :class:`.TokenAmount`
+        :param recipient: The recipient of the transfer
+        :param amount: Amount of tokens to transfer
+        :return: HexStr of the transaction
         """
         client = _force_get_global_client()
         if isinstance(recipient, Wallet):
@@ -116,7 +141,7 @@ class Token(BaseModel):
             self.network.value,
             block,
         )
-        return TokenAmount(raw_amount=balance, decimals=self.decimals, token=self)
+        return TokenAmount(amount=balance, decimals=self.decimals, token=self)
 
     @balance_of.register(str)
     async def _(
@@ -141,7 +166,11 @@ class Token(BaseModel):
             network.value,
             block,
         )
-        return TokenAmount(raw_amount=balance, decimals=self.decimals, token=self)
+        return TokenAmount(
+            amount=balance,
+            decimals=self.decimals,
+            token=self,
+        )
 
     def __repr__(self):
         return f"<'{self.symbol}' on {self.network.name}>"
@@ -152,16 +181,64 @@ class Token(BaseModel):
 class TokenAmount(BaseModel):
     """An abstraction on a token amount"""
 
-    raw_amount: int
-    decimals: int
-    token: "Token"
-    price: Optional[int] = None
+    amount: int
+    """The raw amount of tokens, ignoring the decimal"""
+
+    decimals: int = 18
+    """The number of decimals used onchain to represent the token amount"""
+
+    token: Optional["Token"] = None
+    """The token associated with the amount"""
+
+    def format(self, num_decimals=2):
+        """Format the token to a decimal string, with respect to the token decimals"""
+        return round(self.amount / 10**self.decimals, num_decimals)
+
+    def __truediv__(self, other):
+        """Divide the token by either another TokenAmount or an integer value"""
+        return self._div_by_other(other)
+
+    def __mul__(self, other):
+        """Multiply the token by either another TokenAmount or an integer value"""
+        return self._mul_other(other)
 
     @singledispatchmethod
-    def __div__(self, other_amount: int):
-        return self.raw_amount / other_amount
+    def _mul_other(self, other: int):
+        return TokenAmount(
+            amount=self.amount // other,
+            decimals=self.decimals,
+            token=self.token,
+        )
+
+    @singledispatchmethod
+    def _div_by_other(self, other: int):
+        return TokenAmount(
+            amount=self.amount // other,
+            decimals=self.decimals,
+            token=self.token,
+        )
 
     def __repr__(self):
-        return f"<{self.token.name}: {self.raw_amount / 10**self.decimals}>"
+        if self.token:
+            return f"<{self.token.name}: {self.amount / 10**self.decimals}>"
+        return f"<Amount: {self.amount / 10**self.decimals}>"
 
     __str__ = __repr__
+
+
+@TokenAmount._div_by_other.register(TokenAmount)  # type: ignore
+def _(self: TokenAmount, other: TokenAmount):
+    return TokenAmount(
+        amount=int(self.amount / (other.amount / 10**other.decimals)),
+        decimals=self.decimals,
+        token=self.token,
+    )
+
+
+@TokenAmount._mul_other.register(TokenAmount)  # type: ignore
+def _(self: TokenAmount, other: TokenAmount):
+    return TokenAmount(
+        amount=int(int(self.amount * other.amount) / 10**other.decimals),
+        decimals=self.decimals,
+        token=self.token,
+    )

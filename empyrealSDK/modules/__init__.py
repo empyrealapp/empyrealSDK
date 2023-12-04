@@ -1,8 +1,7 @@
-from . import core
-from .dex import price
+from . import core, dex
 
 
 __all__ = [
     "core",
-    "price",
+    "dex",
 ]

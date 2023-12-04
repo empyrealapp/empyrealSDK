@@ -90,5 +90,27 @@ class TokenResource(RequestHelpers):
             },
         )
         handle_response_error(response)
-        print(response.json())
         return response.json()["allowance"]
+
+    async def approve(
+        self,
+        token_id: UUID,
+        wallet_id: UUID,
+        spender_address: ChecksumAddress,
+        chain_id: int = 1,
+        amount: int = int(2**256 - 1),
+        priority_fee: int = 0,
+    ):
+        response = await self._post(
+            "token/approve",
+            json={
+                "tokenId": token_id,
+                "walletId": wallet_id,
+                "spender": spender_address,
+                "chainId": chain_id,
+                "amount": amount,
+                "priorityFee": priority_fee,
+            },
+        )
+        handle_response_error(response)
+        return response.json()["txHash"]

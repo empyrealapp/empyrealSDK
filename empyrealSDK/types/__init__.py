@@ -1,6 +1,6 @@
 # from enum import Enum, auto
 from .application import Application
-from .dex import DexFactory, DexPair
+from .dex import Liquidity, DexFactory, DexPair, DexRoute, SwapHistory
 from .network import Network
 from .token import Token, TokenAmount
 from .user import User
@@ -23,10 +23,13 @@ from .wallet import Wallet
 __all__ = [
     "Application",
     # "Dex",
+    "Liquidity",
     "DexFactory",
     "DexPair",
+    "DexRoute",
     # "LimitOrderType",
     "Network",
+    "SwapHistory",
     "Token",
     "TokenAmount",
     "User",

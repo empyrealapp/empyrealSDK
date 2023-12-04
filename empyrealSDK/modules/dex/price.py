@@ -1,14 +1,46 @@
+import gzip
 from typing import Optional
 
-from eth_typing import HexAddress
+from eth_typing import HexAddress, ChecksumAddress
 from eth_utils.address import to_checksum_address
 
 from empyrealSDK.exc import handle_response_error
-from empyrealSDK.types import DexPair, Network, Token
 from empyrealSDK.utils import RequestHelpers
 
 
 class PriceResource(RequestHelpers):
+    async def get_taxes(
+        self,
+        token_address: ChecksumAddress,
+        pair_token_address: ChecksumAddress,
+        dex: str = "uniswap",
+        chain_id: int = 1,
+    ):
+        response = await self._put(
+            "token/taxes",
+            json={
+                "tokenAddress": token_address,
+                "pairToken": pair_token_address,
+                "chainId": chain_id,
+                "dex": dex,
+            },
+        )
+        handle_response_error(response)
+        return response.json()
+
+    async def get_routes(
+        self,
+        token_address: ChecksumAddress,
+    ):
+        response = await self._get(
+            "dex/routes",
+            params={
+                "startToken": token_address,
+            },
+        )
+        handle_response_error(response)
+        return response.json()
+
     async def get_pair_info(
         self,
         pair_address: HexAddress,
@@ -28,20 +60,7 @@ class PriceResource(RequestHelpers):
                 "chainId": chain_id,
             },
         )
-        response_json = response.json()
-        token0 = Token(**response_json["token0"])
-        token1 = Token(**response_json["token1"])
-        return DexPair(
-            factory_address=response_json["factoryAddress"],
-            token0=token0,
-            token1=token1,
-            address=response_json["pairAddress"],
-            index=response_json["index"],
-            fee=response_json["feePercentage"],
-            network=Network(response_json["chainId"]),
-            block_number=response_json["blockNumber"],
-            transaction_hash=response_json["transactionHash"],
-        )
+        return response.json()
 
     async def get_token_pairs(
         self,
@@ -58,20 +77,7 @@ class PriceResource(RequestHelpers):
                 "chainId": chain_id,
             },
         )
-        return [
-            DexPair(
-                factory_address=row["factoryAddress"],
-                token0=Token(**row["token0"]),
-                token1=Token(**row["token1"]),
-                address=row["pairAddress"],
-                index=row["index"],
-                fee=row["feePercentage"],
-                network=Network(row["chainId"]),
-                block_number=row["blockNumber"],
-                transaction_hash=row["transactionHash"],
-            )
-            for row in response.json()["pairs"]
-        ]
+        return response.json()["pairs"]
 
     async def get_liquidity(
         self,
@@ -92,3 +98,20 @@ class PriceResource(RequestHelpers):
         )
         handle_response_error(response)
         return response.json()
+
+    async def load_feed(
+        self,
+        pair_address: ChecksumAddress,
+        use_token0: bool = True,
+        start_time: Optional[int] = None,
+        end_time: Optional[int] = None,
+    ):
+        response = await self._get(
+            "price/",
+            params={
+                "pairAddress": pair_address,
+                "useToken0": use_token0,
+            },
+        )
+        handle_response_error(response)
+        return gzip.decompress(response.content).decode("utf-8")
