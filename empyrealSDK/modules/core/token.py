@@ -52,6 +52,21 @@ class TokenResource(RequestHelpers):
         )
         return response.json()
 
+    async def security(
+        self,
+        token_id: UUID,
+        chain_id: int,
+    ):
+        response = await self._get(
+            "security/",
+            params={
+                "tokenId": str(token_id),
+                "chainId": chain_id,
+            },
+        )
+        handle_response_error(response)
+        return response.json()["report"]
+
     async def balance_of(
         self,
         token_address: HexAddress,

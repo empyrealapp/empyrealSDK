@@ -2,6 +2,7 @@ import enum
 from typing import Optional, Union
 from uuid import UUID
 
+from eth_typing import HexStr
 from pydantic import BaseModel, Field
 
 from ..utils.client import _force_get_global_client
@@ -35,17 +36,38 @@ class Wallet(BaseModel):
     name: str
     address: str
     type: WalletType
+    private_key: Optional[HexStr] = Field(None, alias="privateKey")
     group_id: Optional[str] = Field(alias="groupId")
     owner_id: Optional[UUID] = Field(alias="ownerId")
     creator_app_id: Optional[UUID] = Field(alias="creatorAppId")
     data: WalletAppData = WalletAppData()
 
     def __repr__(self):
-        return f"<{self.type.value.capitalize()} Wallet: '0x..{self.address[-4:]}'>"
+        return (
+            f"<{self.type.value.capitalize()} {self.name}: '0x..{self.address[-4:]}'>"
+        )
 
     @classmethod
-    async def create(cls):
-        pass
+    async def get_all(
+        cls,
+    ):
+        client = _force_get_global_client()
+        wallets = await client.wallet.get_app_wallets()
+        return [cls(**w) for w in wallets]
+
+    @classmethod
+    async def create(
+        cls,
+        name: str,
+        private_key: Optional[HexStr] = None,
+        user_id: Optional[UUID] = None,
+    ):
+        client = _force_get_global_client()
+        response = await client.wallet.make_app_wallet(
+            name,
+            private_key=private_key,
+        )
+        return Wallet(**response.json())
 
     @classmethod
     async def load(cls, address):
@@ -56,7 +78,12 @@ class Wallet(BaseModel):
         """
         client = _force_get_global_client()
         wallet = await client.wallet.load(address)
-        return cls(**wallet.json())
+        return cls(**wallet)
+
+    async def load_private_key(self):
+        client = _force_get_global_client()
+        response = await client.wallet.info(self.id, with_private_key=True)
+        return Wallet(**response)
 
     async def get_data(self):
         """

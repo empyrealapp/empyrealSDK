@@ -6,6 +6,7 @@ from eth_typing import ChecksumAddress, HexStr
 from pydantic import BaseModel, Field
 
 from .network import Network
+from .security import Security
 from .wallet import Wallet
 from ..utils.client import _force_get_global_client
 
@@ -142,6 +143,16 @@ class Token(BaseModel):
             block,
         )
         return TokenAmount(amount=balance, decimals=self.decimals, token=self)
+
+    async def security(
+        self,
+    ):
+        client = _force_get_global_client()
+        security = await client.token.security(
+            self.id,
+            self.network.value,
+        )
+        return Security(**security)
 
     @balance_of.register(str)
     async def _(

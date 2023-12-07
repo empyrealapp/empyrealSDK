@@ -5,10 +5,23 @@ from eth_typing import ChecksumAddress, HexStr
 from httpx import Response
 
 from empyrealSDK.utils import RequestHelpers
-from empyrealSDK.exc import handle_response_error
 
 
 class WalletResource(RequestHelpers):
+    async def info(
+        self,
+        wallet_id: UUID,
+        with_private_key: bool = False,
+    ):
+        response = await self._get(
+            "wallets/",
+            params={
+                "walletId": str(wallet_id),
+                "withPrivateKey": with_private_key,
+            },
+        )
+        return response.json()
+
     async def load(self, address: ChecksumAddress):
         response = await self._post(
             "wallets/noncustodial",
@@ -16,12 +29,15 @@ class WalletResource(RequestHelpers):
                 "address": address,
             },
         )
-        return response
+        return response.json()
 
-    async def get_app_wallets(self, user_id: UUID) -> Response:
-        response = await self._get("wallets/app", params={"userId": str(user_id)})
-        handle_response_error(response)
-        return response
+    async def get_app_wallets(self) -> Response:
+        response = await self._get("wallets/app")
+        return response.json()
+
+    async def get_user_wallets(self, user_id: UUID) -> Response:
+        response = await self._get("wallets/user", params={"userId": str(user_id)})
+        return response.json()
 
     async def archive(self, wallet_id: UUID):
         response = await self._put(
@@ -30,17 +46,29 @@ class WalletResource(RequestHelpers):
                 "walletId": wallet_id,
             },
         )
-        handle_response_error(response)
         return response
 
-    async def make_wallet(
+    async def make_app_wallet(
+        self,
+        name,
+        private_key: Optional[HexStr] = None,
+    ):
+        """
+        Make an app wallet
+        """
+        return await self._make_pk_wallet(name, private_key)
+
+    async def make_user_wallet(
         self,
         user_id: UUID,
         name: str,
         private_key: Optional[HexStr] = None,
     ):
+        """
+        Make a wallet for a user.
+        """
         if private_key:
-            return await self._make_pk_wallet(user_id, name, private_key)
+            return await self._make_pk_wallet(name, private_key, user_id=user_id)
         return await self._make_mnemonic_wallet(user_id, name)
 
     async def update_wallet_data(
@@ -74,22 +102,20 @@ class WalletResource(RequestHelpers):
                 "name": name,
             },
         )
-        handle_response_error(response)
         return response
 
     async def _make_pk_wallet(
         self,
-        user_id: UUID,
         name: str,
-        private_key: HexStr,
+        private_key: Optional[HexStr] = None,
+        user_id: Optional[UUID] = None,
     ) -> Response:
         response = await self._post(
             "wallets/pk",
             json={
-                "userId": str(user_id),
                 "name": name,
                 "privateKey": private_key,
+                "userId": user_id,
             },
         )
-        handle_response_error(response)
         return response

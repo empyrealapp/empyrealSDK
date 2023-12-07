@@ -40,4 +40,6 @@ __pyproject.toml
 
 # test
 test.py
+test_wallet.py
 tests/
+scripts/

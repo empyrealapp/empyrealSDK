@@ -4,6 +4,8 @@ import httpx
 from httpx import Response
 from httpx._types import PrimitiveData
 
+from empyrealSDK.exc import handle_response_error
+
 if TYPE_CHECKING:
     from .. import EmpyrealSDK
 
@@ -32,33 +34,40 @@ class RequestHelpers:
                 },
                 params=params,
             )
+        handle_response_error(response)
         return response
 
     async def _post(self, path: str, json: Any) -> Response:
         async with httpx.AsyncClient() as client:
-            return await client.post(
+            response = await client.post(
                 f"{self.rpc_url}/{self.version}/{path}",
                 json=json,
                 headers={
                     "API-KEY": self.api_key,
                 },
             )
+        handle_response_error(response)
+        return response
 
     async def _put(self, path: str, json: Any = {}) -> Response:
         async with httpx.AsyncClient() as client:
-            return await client.put(
+            response = await client.put(
                 f"{self.rpc_url}/{self.version}/{path}",
                 json=json,
                 headers={
                     "API-KEY": self.api_key,
                 },
             )
+        handle_response_error(response)
+        return response
 
     async def _delete(self, path: str) -> Response:
         async with httpx.AsyncClient() as client:
-            return await client.delete(
+            response = await client.delete(
                 f"{self.rpc_url}/{self.version}/{path}",
                 headers={
                     "API-KEY": self.api_key,
                 },
             )
+        handle_response_error(response)
+        return response

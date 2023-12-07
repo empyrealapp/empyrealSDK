@@ -1,16 +1,20 @@
 # from typing import Optional
 # from uuid import UUID
-from httpx import Response
 
 from empyrealSDK.utils import RequestHelpers
 from empyrealSDK.exc import handle_response_error
 
 
 class UserResource(RequestHelpers):
-    async def get_from_telegram(self, telegram_id: str) -> Response:
+    async def create(self, name: str):
+        response = await self._post("users/", json={"name": name})
+        handle_response_error(response)
+        return response.json()
+
+    async def get_from_telegram(self, telegram_id: str):
         response = await self._get("users/telegram", params={"id": str(telegram_id)})
         handle_response_error(response)
-        return response
+        return response.json()
 
     # async def get_grants(
     #     self,

@@ -33,22 +33,24 @@ class User(BaseModel):
     async def load(cls, telegram_id: Union[str, int]):
         client = _force_get_global_client()
         response = await client.user.get_from_telegram(telegram_id)
-        return cls(**response.json())
+        return cls(**response)
 
     @classmethod
     async def create(cls, name: str):
-        raise NotImplementedError()
+        client = _force_get_global_client()
+        response = await client.user.create(name)
+        return cls(**response)
 
     async def get_app_wallets(self):
         client = _force_get_global_client()
-        response = await client.wallet.get_app_wallets(self.id)
+        response = await client.wallet.get_user_wallets(self.id)
         return [Wallet(**row) for row in response.json()]
 
     async def make_wallet(self, name: str, private_key: Optional[HexStr] = None):
         client = _force_get_global_client()
-        response = await client.wallet.make_wallet(
-            self.id,
-            name,
+        response = await client.wallet.make_user_wallet(
+            user_id=self.id,
+            name=name,
             private_key=private_key,
         )
         return Wallet(**response.json())

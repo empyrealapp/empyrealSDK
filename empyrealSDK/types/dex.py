@@ -324,6 +324,13 @@ class SwapHistory(BaseModel):
     __str__ = __repr__
 
 
+class AllTimeHigh(BaseModel):
+    reserve0: TokenAmount
+    reserve1: TokenAmount
+    date: datetime
+    block: int
+
+
 class DexPair(BaseModel):
     factory_address: ChecksumAddress
     token0: Token
@@ -338,6 +345,23 @@ class DexPair(BaseModel):
 
     transaction_hash: HexStr
     factory: DexFactory
+
+    async def all_time_high(self):
+        client = _force_get_global_client()
+        response = await client.swap.ath(self.address)
+        ath = response["allTimeHigh"]
+        reserve0 = TokenAmount(
+            amount=ath["reserve0Raw"], decimals=response["token0"]["decimals"]
+        )
+        reserve1 = TokenAmount(
+            amount=ath["reserve1Raw"], decimals=response["token1"]["decimals"]
+        )
+        return AllTimeHigh(
+            reserve0=reserve0,
+            reserve1=reserve1,
+            date=ath["date"],
+            block=ath["block"],
+        )
 
     async def get_liquidity(self, block_number: Optional[int] = None):
         client = _force_get_global_client()
@@ -411,3 +435,6 @@ class DexPair(BaseModel):
         return f"<DexPair: {self.token0.symbol}, {self.token1.symbol}>"
 
     __str__ = __repr__
+
+
+UniswapV2 = DexFactory.UniswapV2

@@ -7,6 +7,20 @@ from empyrealSDK.utils import RequestHelpers
 
 
 class SwapResource(RequestHelpers):
+    async def ath(
+        self,
+        pair_address: ChecksumAddress,
+        chain_id: int = 1,
+    ):
+        response = await self._get(
+            "dex/ath",
+            params={
+                "pairAddress": pair_address,
+            },
+        )
+        handle_response_error(response)
+        return response.json()
+
     async def swap(
         self,
         path: list[ChecksumAddress],

@@ -26,7 +26,7 @@ extras_require = {
 
 setup(
     name="empyrealSDK",
-    version="0.0.1.post3",
+    version="0.0.1.post14",
     description="Empyreal SDK for web3 development",
     long_description=readme,
     long_description_content_type="text/markdown",
